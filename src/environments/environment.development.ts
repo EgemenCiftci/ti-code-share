@@ -7,4 +7,6 @@ export const environment = {
     authDomain: 'ti-code-share.firebaseapp.com',
     messagingSenderId: '464071828624',
     measurementId: 'G-70G52TMVT6',
-  },};
+    databaseURL: "https://ti-code-share-default-rtdb.europe-west1.firebasedatabase.app",
+  },
+};
