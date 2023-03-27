@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "ti-code-share": {
+      "hosting": {
+        "ti-code-share": [
+          "ti-code-share"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "ti-code-share"
+  }
+}
