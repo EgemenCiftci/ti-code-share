@@ -1,8 +1,11 @@
-<select [(ngModel)]="language">
-  <option *ngFor="let lang of languages" [value]="lang.key">{{lang.label}}</option>
-</select>
-<select [(ngModel)]="theme">
-  <option *ngFor="let thm of themes" [value]="thm.key">{{thm.label}}</option>
-</select>
-<span>{{key}}</span>
-<ngx-monaco-editor [options]="editorOptions" [(ngModel)]="code"></ngx-monaco-editor>
+<mat-toolbar color="primary">
+    <mat-icon>code</mat-icon>
+    <mat-icon style="margin-right: 10px;">share</mat-icon>
+    <span>TI Code Share</span>
+    <span class="spacer"></span>
+    <nav>
+      <button mat-flat-button color="primary" routerLink="/about" routerLinkActive="active"
+        ariaCurrentWhenActive="page">About</button>
+    </nav>
+  </mat-toolbar>
+<router-outlet></router-outlet>
