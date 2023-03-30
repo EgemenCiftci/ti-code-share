@@ -1,8 +1,21 @@
-<select [(ngModel)]="language">
-    <option *ngFor="let lang of languages" [value]="lang.key">{{lang.label}}</option>
-  </select>
-  <select [(ngModel)]="theme">
-    <option *ngFor="let thm of themes" [value]="thm.key">{{thm.label}}</option>
-  </select>
-  <span>{{key}}</span>
-  <ngx-monaco-editor [options]="editorOptions" [(ngModel)]="code" (init)="editorInit($event)"></ngx-monaco-editor>
+<mat-form-field appearance="fill">
+  <mat-label>Language</mat-label>
+  <mat-select [(ngModel)]="language">
+    <mat-option *ngFor="let lang of languages" [value]="lang.key">
+      {{lang.label}}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+
+<mat-form-field appearance="fill">
+  <mat-label>Theme</mat-label>
+  <mat-select [(ngModel)]="theme">
+    <mat-option *ngFor="let thm of themes" [value]="thm.key">
+      {{thm.label}}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+
+<span>{{key}}</span>
+
+<ngx-monaco-editor [options]="editorOptions" [(ngModel)]="code" (init)="editorInit($event)"></ngx-monaco-editor>

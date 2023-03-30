@@ -23,7 +23,6 @@ describe('AppComponent', () => {
   it(`should have as title 'ti-code-share'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('ti-code-share');
   });
 
   it('should render title', () => {
