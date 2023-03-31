@@ -81,13 +81,13 @@ export class EditorComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       const key = params.get('key');
 
-      if (!key) {
-        this.router.navigate(['editor', this.generateKey()]);
+      if (!localStorage.getItem('userName')) {
+        this.router.navigate(key ? ['settings', key] : ['settings']);
         return;
       }
 
-      if (!this.formGroup.get('userName')?.value) {
-        this.router.navigate(['settings', key]);
+      if (!key) {
+        this.router.navigate(['editor', this.generateKey()]);
         return;
       }
 
@@ -105,7 +105,7 @@ export class EditorComponent implements OnInit {
 
   editorInit(editor: MonacoStandaloneCodeEditor) {
     editor.onDidChangeCursorPosition(e => {
-      const userInfo = this.getUserInfo(this.formGroup.get('userName')?.value ?? '');
+      const userInfo = this.getUserInfo(localStorage.getItem('userName') ?? '');
       if (userInfo) {
         userInfo.position = e.position;
       }
