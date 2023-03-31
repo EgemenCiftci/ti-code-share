@@ -23,18 +23,16 @@ export class SettingsComponent implements OnInit {
     private router: Router) {
   }
 
-  saveClick() {
-    localStorage.setItem('userName', this.formGroup.get('userName')?.value ?? '');
-    localStorage.setItem('theme', this.formGroup.get('theme')?.value ?? this._defaultTheme);
-    
-    if (this._key) {
-      this.router.navigate(['editor', this._key]);
-    }
-  }
-
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       this._key = params.get('key') ?? undefined;
     });
+  }
+
+  saveClick() {
+    localStorage.setItem('userName', this.formGroup.get('userName')?.value ?? '');
+    localStorage.setItem('theme', this.formGroup.get('theme')?.value ?? this._defaultTheme);
+
+    this.router.navigate(this._key ? ['editor', this._key] : ['editor']);
   }
 }
