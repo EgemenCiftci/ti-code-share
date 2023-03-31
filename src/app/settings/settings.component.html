@@ -1,0 +1,17 @@
+<form [formGroup]="formGroup" class="p-3">
+    <mat-form-field appearance="fill">
+        <mat-label>User Name</mat-label>
+        <input matInput formControlName="userName">
+      </mat-form-field>
+      <br/>
+      <mat-form-field appearance="fill">
+        <mat-label>Theme</mat-label>
+        <mat-select formControlName="theme">
+          <mat-option *ngFor="let entry of themeEntries" [value]="entry[0]">
+            {{entry[1]}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+      <br/>
+    <button mat-raised-button color="primary" (click)="saveClick()">Save</button>
+</form>
