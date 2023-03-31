@@ -10,6 +10,7 @@ const routes: Routes = [
   { path: 'editor', component: EditorComponent },
   { path: 'editor/:key', component: EditorComponent },
   { path: 'settings', component: SettingsComponent },
+  { path: 'settings/:key', component: SettingsComponent },
   { path: 'about', component: AboutComponent },
   { path: '**', component: PageNotFoundComponent }
 ];

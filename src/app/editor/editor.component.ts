@@ -87,7 +87,7 @@ export class EditorComponent implements OnInit {
       }
 
       if (!this.formGroup.get('userName')?.value) {
-        this.router.navigate(['settings', this.formGroup.get('key')?.value]);
+        this.router.navigate(['settings', key]);
         return;
       }
 
