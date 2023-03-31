@@ -82,12 +82,12 @@ export class EditorComponent implements OnInit {
       const key = params.get('key');
 
       if (!localStorage.getItem('userName')) {
-        this.router.navigate(key ? ['settings', key] : ['settings']);
+        this.router.navigate(key ? ['/settings', key] : ['/settings']);
         return;
       }
 
       if (!key) {
-        this.router.navigate(['editor', this.generateKey()]);
+        this.router.navigate(['/editor', this.generateKey()]);
         return;
       }
 

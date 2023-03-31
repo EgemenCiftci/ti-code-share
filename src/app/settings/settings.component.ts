@@ -33,6 +33,6 @@ export class SettingsComponent implements OnInit {
     localStorage.setItem('userName', this.formGroup.get('userName')?.value ?? '');
     localStorage.setItem('theme', this.formGroup.get('theme')?.value ?? this._defaultTheme);
 
-    this.router.navigate(this._key ? ['editor', this._key] : ['editor']);
+    this.router.navigate(this._key ? ['/editor', this._key] : ['/editor']);
   }
 }
