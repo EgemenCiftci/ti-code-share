@@ -1,16 +1,23 @@
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
-import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor } from '@materia-ui/ngx-monaco-editor';
+import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor, MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
 import { Database, ref, set, onValue, DatabaseReference, update, child, get } from '@angular/fire/database';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Languages } from '../enums/languages';
 import { Themes } from '../enums/themes';
-import { FormControl, FormGroup } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { MatFormField, MatLabel } from '@angular/material/form-field';
+import { MatInput } from '@angular/material/input';
+import { MatSelect } from '@angular/material/select';
+import { NgFor } from '@angular/common';
+import { MatOption } from '@angular/material/core';
 
 @Component({
-  selector: 'app-editor',
-  templateUrl: './editor.component.html',
-  styleUrls: ['./editor.component.css']
+    selector: 'app-editor',
+    templateUrl: './editor.component.html',
+    styleUrls: ['./editor.component.css'],
+    standalone: true,
+    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, NgFor, MatOption, MonacoEditorModule]
 })
 export class EditorComponent implements OnInit, OnDestroy {
   languageEntries = Object.entries(Languages);
