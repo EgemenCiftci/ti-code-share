@@ -1,6 +1,3 @@
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-
-
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { environment } from './environments/environment';
 import { provideDatabase, getDatabase } from '@angular/fire/database';
@@ -21,7 +18,19 @@ import { importProvidersFrom } from '@angular/core';
 
 bootstrapApplication(AppComponent, {
     providers: [
-        importProvidersFrom(BrowserModule, AppRoutingModule, FormsModule, ReactiveFormsModule, MonacoEditorModule, MatInputModule, MatToolbarModule, MatIconModule, MatButtonModule, MatSelectModule, MatFormFieldModule),
+        importProvidersFrom(
+            BrowserModule, 
+            AppRoutingModule, 
+            FormsModule, 
+            ReactiveFormsModule, 
+            MonacoEditorModule, 
+            MatInputModule, 
+            MatToolbarModule, 
+            MatIconModule, 
+            MatButtonModule, 
+            MatSelectModule, 
+            MatFormFieldModule
+        ),
         provideFirebaseApp(() => initializeApp(environment.firebase)),
         provideDatabase(() => getDatabase()),
         {
