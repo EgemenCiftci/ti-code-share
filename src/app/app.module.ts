@@ -12,7 +12,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
-
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { environment } from '../environments/environment';
@@ -35,8 +34,6 @@ import { SettingsComponent } from './settings/settings.component';
     FormsModule,
     ReactiveFormsModule,
     MonacoEditorModule,
-    provideFirebaseApp(() => initializeApp(environment.firebase)),
-    provideDatabase(() => getDatabase()),
     BrowserAnimationsModule,
     MatInputModule,
     MatToolbarModule,
@@ -45,10 +42,14 @@ import { SettingsComponent } from './settings/settings.component';
     MatSelectModule,
     MatFormFieldModule
   ],
-  providers: [{
-    provide: MONACO_PATH,
-    useValue: 'https://unpkg.com/monaco-editor@0.36.1/min/vs',
-  },],
+  providers: [
+    provideFirebaseApp(() => initializeApp(environment.firebase)),
+    provideDatabase(() => getDatabase()),
+    {
+      provide: MONACO_PATH,
+      useValue: 'https://unpkg.com/monaco-editor@0.52.0/min/vs'
+    }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
