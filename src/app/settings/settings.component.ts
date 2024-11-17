@@ -5,16 +5,15 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatSelect } from '@angular/material/select';
-
 import { MatOption } from '@angular/material/core';
 import { MatButton } from '@angular/material/button';
 
 @Component({
-    selector: 'app-settings',
-    templateUrl: './settings.component.html',
-    styleUrls: ['./settings.component.css'],
-    standalone: true,
-    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatButton]
+  selector: 'app-settings',
+  templateUrl: './settings.component.html',
+  styleUrls: ['./settings.component.css'],
+  standalone: true,
+  imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatButton]
 })
 export class SettingsComponent implements OnInit {
   private route = inject(ActivatedRoute);
@@ -28,12 +27,6 @@ export class SettingsComponent implements OnInit {
     userName: new FormControl(localStorage.getItem('userName') ?? ''),
     theme: new FormControl(localStorage.getItem('theme') ?? this._defaultTheme),
   });
-
-  /** Inserted by Angular inject() migration for backwards compatibility */
-  constructor(...args: unknown[]);
-
-  constructor() {
-  }
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {

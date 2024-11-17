@@ -3,17 +3,17 @@
     <mat-label>User Name</mat-label>
     <input matInput formControlName="userName">
   </mat-form-field>
-  <br/>
+  <br />
   <mat-form-field appearance="fill">
     <mat-label>Theme</mat-label>
     <mat-select formControlName="theme">
       @for (entry of themeEntries; track entry) {
-        <mat-option [value]="entry[0]">
-          {{entry[1]}}
-        </mat-option>
+      <mat-option [value]="entry[0]">
+        {{entry[1]}}
+      </mat-option>
       }
     </mat-select>
   </mat-form-field>
-  <br/>
+  <br />
   <button mat-raised-button color="primary" (click)="saveClick()">Save</button>
 </form>

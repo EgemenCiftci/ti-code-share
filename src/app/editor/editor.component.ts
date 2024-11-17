@@ -13,11 +13,11 @@ import { MatSelect } from '@angular/material/select';
 import { MatOption } from '@angular/material/core';
 
 @Component({
-    selector: 'app-editor',
-    templateUrl: './editor.component.html',
-    styleUrls: ['./editor.component.css'],
-    standalone: true,
-    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MonacoEditorModule]
+  selector: 'app-editor',
+  templateUrl: './editor.component.html',
+  styleUrls: ['./editor.component.css'],
+  standalone: true,
+  imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MonacoEditorModule]
 })
 export class EditorComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
