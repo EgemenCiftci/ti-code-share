@@ -20,6 +20,9 @@ import { MatOption } from '@angular/material/core';
     imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MonacoEditorModule]
 })
 export class EditorComponent implements OnInit, OnDestroy {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
   languageEntries = Object.entries(Languages);
   themeEntries = Object.entries(Themes);
 
@@ -64,9 +67,10 @@ export class EditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router) {
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {
   }
 
   ngOnInit() {

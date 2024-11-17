@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Themes } from '../enums/themes';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -17,6 +17,9 @@ import { MatButton } from '@angular/material/button';
     imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MatButton]
 })
 export class SettingsComponent implements OnInit {
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+
   themeEntries = Object.entries(Themes);
   private _defaultTheme = this.themeEntries.find(f => f[1] == Themes.vs_dark)?.[0] ?? '';
   private _key?: string;
@@ -26,9 +29,10 @@ export class SettingsComponent implements OnInit {
     theme: new FormControl(localStorage.getItem('theme') ?? this._defaultTheme),
   });
 
-  constructor(
-    private route: ActivatedRoute,
-    private router: Router) {
+  /** Inserted by Angular inject() migration for backwards compatibility */
+  constructor(...args: unknown[]);
+
+  constructor() {
   }
 
   ngOnInit() {
