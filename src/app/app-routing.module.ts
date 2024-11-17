@@ -2,13 +2,13 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
 const routes: Routes = [
-  { path: '', loadComponent: () => import('./editor/editor.component').then(m => m.EditorComponent) },
-  { path: 'editor', loadComponent: () => import('./editor/editor.component').then(m => m.EditorComponent) },
-  { path: 'editor/:key', loadComponent: () => import('./editor/editor.component').then(m => m.EditorComponent) },
-  { path: 'settings', loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent) },
-  { path: 'settings/:key', loadComponent: () => import('./settings/settings.component').then(m => m.SettingsComponent) },
-  { path: 'about', loadComponent: () => import('./about/about.component').then(m => m.AboutComponent) },
-  { path: '**', loadComponent: () => import('./page-not-found/page-not-found.component').then(m => m.PageNotFoundComponent) }
+  { path: '', loadComponent: () => import('./components/editor/editor.component').then(m => m.EditorComponent) },
+  { path: 'editor', loadComponent: () => import('./components/editor/editor.component').then(m => m.EditorComponent) },
+  { path: 'editor/:key', loadComponent: () => import('./components/editor/editor.component').then(m => m.EditorComponent) },
+  { path: 'settings', loadComponent: () => import('./components/settings/settings.component').then(m => m.SettingsComponent) },
+  { path: 'settings/:key', loadComponent: () => import('./components/settings/settings.component').then(m => m.SettingsComponent) },
+  { path: 'about', loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent) },
+  { path: '**', loadComponent: () => import('./components/page-not-found/page-not-found.component').then(m => m.PageNotFoundComponent) }
 ];
 
 @NgModule({
