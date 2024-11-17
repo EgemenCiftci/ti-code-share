@@ -12,18 +12,22 @@
   <mat-form-field appearance="fill">
     <mat-label>Language</mat-label>
     <mat-select formControlName="language">
-      <mat-option *ngFor="let entry of languageEntries" [value]="entry[0]">
-        {{entry[1]}}
-      </mat-option>
+      @for (entry of languageEntries; track entry) {
+        <mat-option [value]="entry[0]">
+          {{entry[1]}}
+        </mat-option>
+      }
     </mat-select>
   </mat-form-field>
 
   <mat-form-field appearance="fill">
     <mat-label>Theme</mat-label>
     <mat-select formControlName="theme">
-      <mat-option *ngFor="let entry of themeEntries" [value]="entry[0]">
-        {{entry[1]}}
-      </mat-option>
+      @for (entry of themeEntries; track entry) {
+        <mat-option [value]="entry[0]">
+          {{entry[1]}}
+        </mat-option>
+      }
     </mat-select>
   </mat-form-field>
 </form>

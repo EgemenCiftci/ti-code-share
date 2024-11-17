@@ -9,7 +9,7 @@ import { Subscription } from 'rxjs';
 import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatSelect } from '@angular/material/select';
-import { NgFor } from '@angular/common';
+
 import { MatOption } from '@angular/material/core';
 
 @Component({
@@ -17,7 +17,7 @@ import { MatOption } from '@angular/material/core';
     templateUrl: './editor.component.html',
     styleUrls: ['./editor.component.css'],
     standalone: true,
-    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, NgFor, MatOption, MonacoEditorModule]
+    imports: [FormsModule, ReactiveFormsModule, MatFormField, MatLabel, MatInput, MatSelect, MatOption, MonacoEditorModule]
 })
 export class EditorComponent implements OnInit, OnDestroy {
   languageEntries = Object.entries(Languages);
