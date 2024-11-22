@@ -17,13 +17,13 @@ form.editor-form>mat-form-field>div.mat-mdc-form-field-bottom-align {
   display: none !important;
 }
 
-.remote-cursor {
-  background-color: rgba(0, 0, 255, 0.5);
-  /* Blue cursor for other users */
-  width: 2px;
-}
+/* Required for dynamic-styles */
+@keyframes fadeOut {
+  0% {
+    opacity: 1;
+  }
 
-.remote-highlight {
-  background-color: rgba(255, 255, 0, 0.3);
-  /* Yellow highlight for other users */
+  100% {
+    opacity: 0;
+  }
 }

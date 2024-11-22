@@ -1,6 +1,6 @@
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor, MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
-import { Database, ref, set, onValue, DatabaseReference, get } from '@angular/fire/database';
+import { Database, ref, set, onValue, DatabaseReference, get, child, remove } from '@angular/fire/database';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Languages } from '../../enums/languages';
 import { Themes } from '../../enums/themes';
@@ -10,10 +10,12 @@ import { MatFormField, MatLabel } from '@angular/material/form-field';
 import { MatInput } from '@angular/material/input';
 import { MatSelect } from '@angular/material/select';
 import { MatOption } from '@angular/material/core';
+import { MatTooltip } from '@angular/material/tooltip';
 import { Position } from 'src/app/models/position';
 import { User } from 'src/app/models/user';
 import { Selection } from 'src/app/models/selection';
 import { GeneratorService } from 'src/app/services/generator.service';
+import { Colors } from 'src/app/enums/colors';
 
 @Component({
   selector: 'app-editor',
@@ -28,16 +30,21 @@ import { GeneratorService } from 'src/app/services/generator.service';
     MatInput,
     MatSelect,
     MatOption,
+    MatTooltip,
     MonacoEditorModule
   ]
 })
 export class EditorComponent implements OnInit, OnDestroy {
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private generatorService = inject(GeneratorService);
+  private database = inject(Database);
+  private renderer = inject(Renderer2);
 
   languageEntries = Object.entries(Languages);
   themeEntries = Object.entries(Themes);
+  colors = Object.keys(Colors);
 
   private _subscriptions: Subscription[] = [];
   private _defaultLanguage = this.languageEntries.find(f => f[1] == Languages.csharp)?.[0] ?? '';
@@ -45,7 +52,8 @@ export class EditorComponent implements OnInit, OnDestroy {
   private _defaultCode = '';
   private _defaultPosition: Position = { lineNumber: 1, column: 1 };
   private _defaultSelection: Selection = { begin: { lineNumber: 0, column: 0 }, end: { lineNumber: 0, column: 0 } };
-  private _defaultUsers: User[] = [{ code: '', name: '', position: this._defaultPosition, selection: this._defaultSelection }];
+  private _defaultUsers: User[] = [];
+  private oldDecorations: string[] | undefined;
 
   formGroup: FormGroup = new FormGroup({
     userName: new FormControl({ value: localStorage.getItem('userName') ?? '', disabled: true }),
@@ -61,28 +69,14 @@ export class EditorComponent implements OnInit, OnDestroy {
     theme: this.formGroup.get('theme')?.value?.replace('_', '-') ?? this._defaultTheme
   };
 
-  private _database: Database = inject(Database);
   private _languageRef?: DatabaseReference;
   private _codeRef?: DatabaseReference;
-  private _usersRef?: DatabaseReference;
-
-  private _users = this._defaultUsers;
+  private _usersRef!: DatabaseReference;
+  users = this._defaultUsers;
   private editor?: MonacoStandaloneCodeEditor;
   private key?: string;
   private currentUser?: User;
-
-  get users(): User[] {
-    return this._users;
-  }
-
-  set users(value: User[]) {
-    if (value !== this._users) {
-      this._users = value;
-      if (this._usersRef) {
-        set(this._usersRef, value);
-      }
-    }
-  }
+  private oldUserCodes = '';
 
   ngOnInit() {
     const languageControl = this.formGroup.get('language');
@@ -108,16 +102,6 @@ export class EditorComponent implements OnInit, OnDestroy {
 
     const codeControl = this.formGroup.get('code');
 
-    const s2 = codeControl?.valueChanges.subscribe(async newValue => {
-      if (this._codeRef && newValue !== undefined) {
-        await set(this._codeRef, newValue);
-      }
-    });
-
-    if (s2) {
-      this._subscriptions.push(s2);
-    }
-
     const s3 = this.route.paramMap.subscribe(async params => {
       const key = params.get('key');
 
@@ -140,9 +124,11 @@ export class EditorComponent implements OnInit, OnDestroy {
       this.key = key;
       this.formGroup.get('key')?.patchValue(key);
 
-      this._languageRef = ref(this._database, `${key}/language`);
-      this._codeRef = ref(this._database, `${key}/code`);
-      this._usersRef = ref(this._database, `${key}/users`);
+      this._languageRef = ref(this.database, `${key}/language`);
+      this._codeRef = ref(this.database, `${key}/code`);
+      this._usersRef = ref(this.database, `${key}/users`);
+
+      set(child(this._usersRef, this.currentUser.code), this.currentUser);
 
       codeControl?.patchValue(await this.getCode());
 
@@ -159,7 +145,14 @@ export class EditorComponent implements OnInit, OnDestroy {
       });
 
       onValue(this._usersRef, f => {
-        this.users = f.val() ?? this._defaultUsers;
+        const transformedArray = Object.entries(f.val()).map(([key, value]: [string, any]) => ({ code: key, name: value.name, position: value.position, selection: value.selection }));
+        this.users = transformedArray ?? this._defaultUsers;
+        const newUserCodes = this.users.map(x => x.code).join();
+        if (this.oldUserCodes !== newUserCodes) {
+          this.oldUserCodes = newUserCodes;
+          this.updateStyles(this.users, this.colors);
+        }
+
         this.updateUserOverlays();
       });
     });
@@ -173,6 +166,12 @@ export class EditorComponent implements OnInit, OnDestroy {
     this._subscriptions.forEach(s => s.unsubscribe());
   }
 
+  @HostListener('window:beforeunload') unloadNotification() {
+    if (this.currentUser) {
+      remove(child(this._usersRef, this.currentUser.code));
+    }
+  }
+
   editorInit(editor: MonacoStandaloneCodeEditor) {
     this.editor = editor;
 
@@ -180,7 +179,7 @@ export class EditorComponent implements OnInit, OnDestroy {
       if (this.currentUser) {
         this.currentUser.position.column = e.position.column;
         this.currentUser.position.lineNumber = e.position.lineNumber;
-        set(ref(this._database, `${this.key}/users/${this.currentUser.code}/position`), this.currentUser.position);
+        set(child(this._usersRef, `${this.currentUser.code}/position`), this.currentUser.position);
       }
     });
 
@@ -190,13 +189,27 @@ export class EditorComponent implements OnInit, OnDestroy {
         this.currentUser.selection.begin.lineNumber = e.selection.startLineNumber;
         this.currentUser.selection.end.column = e.selection.positionColumn;
         this.currentUser.selection.end.lineNumber = e.selection.positionLineNumber;
-        set(ref(this._database, `${this.key}/users/${this.currentUser.code}/selection`), this.currentUser.selection);
+        set(child(this._usersRef, `${this.currentUser.code}/selection`), this.currentUser.selection);
       }
     });
-  }
 
-  private getUserInfo(userCode: string): User | undefined {
-    return this.users.find(f => f.code === userCode);
+    editor.onDidChangeModelContent((event) => {
+      event.changes.forEach(change => {
+        if (change.text && change.rangeLength === 0) {
+          console.log('Text was inserted by typing:', change.text);
+
+          if (this._codeRef) {
+            set(this._codeRef, editor.getValue());
+          }
+        } else if (!change.text && change.rangeLength > 0) {
+          console.log('Text was deleted by typing:', change.rangeLength, 'characters');
+
+          if (this._codeRef) {
+            set(this._codeRef, editor.getValue());
+          }
+        }
+      });
+    });
   }
 
   private async getCode(): Promise<string> {
@@ -204,29 +217,32 @@ export class EditorComponent implements OnInit, OnDestroy {
   }
 
   private updateUserOverlays() {
-    // Clear previous decorations
     const decorations: monaco.editor.IModelDeltaDecoration[] = [];
 
-    // Add overlays for each user
-    Object.entries(this.users).forEach(([userCode, data]) => {
-      if (userCode === this.currentUser?.code)
-        return; // Skip current user
+    this.users.forEach((user, i) => {
+      if (user.code === this.currentUser?.code) {
+        return;
+      }
 
-      const position = data.position;
+      this.createStyles(user, this.colors[i]);
 
-      // Add cursor decoration
+      const position = user.position;
+
       if (position) {
         decorations.push({
-          range: new monaco.Range(position.lineNumber, position.column, position.lineNumber, position.column),
+          range: new monaco.Range(
+            position.lineNumber,
+            position.column,
+            position.lineNumber,
+            position.column),
           options: {
-            className: 'remote-cursor',
-          },
+            className: `cursor-${user.code}`
+          }
         });
       }
 
-      const selection = data.selection;
+      const selection = user.selection;
 
-      // Add highlight decoration
       if (selection) {
         decorations.push({
           range: new monaco.Range(
@@ -236,13 +252,41 @@ export class EditorComponent implements OnInit, OnDestroy {
             selection.end.column
           ),
           options: {
-            className: 'remote-highlight',
-          },
+            className: `highlight-${user.code}`
+          }
         });
       }
     });
 
-    // Apply decorations
-    this.editor?.deltaDecorations([], decorations);
+    this.oldDecorations = this.editor?.deltaDecorations(this.oldDecorations ?? [], decorations);
+  }
+
+  private removeStyles() {
+    const styleElement = document.getElementById('dynamic-styles');
+
+    if (styleElement) {
+      document.head.removeChild(styleElement);
+    }
+  }
+
+  private updateStyles(users: User[], colors: string[]) {
+    this.removeStyles();
+
+    users.forEach((user, i) => {
+      if (user.code === this.currentUser?.code) {
+        return;
+      }
+
+      this.createStyles(user, colors[i]);
+    });
+  }
+
+  private createStyles(user: User, color: string) {
+    const styles = `.cursor-${user.code} { border: 1px solid ${color}; } .cursor-${user.code}::after { content: '${user.name}'; position: absolute; top: 20px; left: 0; background-color: ${color}; color: white; padding: 1px; border: 1px solid ${color}; border-radius: 1px; font-size: 10px; line-height: 10px; white-space: nowrap; z-index: 1000; animation: fadeOut 3s forwards; } .highlight-${user.code} { border: 1px solid ${color}; background-color: ${color}; }`;
+    const styleSheet = this.renderer.createElement('style');
+    styleSheet.id = 'dynamic-styles'
+    styleSheet.type = 'text/css';
+    styleSheet.innerHTML = styles;
+    this.renderer.appendChild(document.head, styleSheet);
   }
 }

@@ -8,6 +8,7 @@ import { MatOption } from '@angular/material/core';
 import { MatButton } from '@angular/material/button';
 import { Themes } from 'src/app/enums/themes';
 import { GeneratorService } from 'src/app/services/generator.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-settings',

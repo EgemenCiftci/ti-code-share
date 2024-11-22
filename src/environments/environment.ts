@@ -9,5 +9,5 @@ export const environment = {
     measurementId: 'G-70G52TMVT6',
     databaseURL: "https://ti-code-share-default-rtdb.europe-west1.firebasedatabase.app"
   },
-  version: '1.0.0',
+  version: '1.0.0'
 };

@@ -1,4 +1,7 @@
-<form [formGroup]="formGroup" class="editor-form">
+<ng-container class="left" [formGroup]="formGroup">
+  <ngx-monaco-editor formControlName="code" [options]="editorOptions" (init)="editorInit($event)"></ngx-monaco-editor>
+</ng-container>
+<form [formGroup]="formGroup" class="editor-form right">
   <mat-form-field appearance="fill">
     <mat-label>User Name</mat-label>
     <input matInput formControlName="userName">
@@ -30,8 +33,8 @@
       }
     </mat-select>
   </mat-form-field>
-</form>
 
-<ng-container [formGroup]="formGroup">
-  <ngx-monaco-editor formControlName="code" [options]="editorOptions" (init)="editorInit($event)"></ngx-monaco-editor>
-</ng-container>
+  @for (user of users; let i = $index; track user) {
+  <div class="user-div" [matTooltip]="user.name" [style.backgroundColor]="colors[i]">{{user.name}}</div>
+  }
+</form>
