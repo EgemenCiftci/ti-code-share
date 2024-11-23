@@ -4,7 +4,6 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class GeneratorService {
-
   generateKey(): string {
     return Math.random().toString(36).substring(2);
   }

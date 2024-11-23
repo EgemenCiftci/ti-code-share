@@ -1,7 +1,7 @@
 import { Component, HostListener, inject, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor, MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
-import { Database, ref, set, onValue, DatabaseReference, get, child, remove } from '@angular/fire/database';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Database, ref, set, onValue, DatabaseReference, get, child, remove, onChildAdded, onChildRemoved } from '@angular/fire/database';
+import { ActivatedRoute } from '@angular/router';
 import { Languages } from '../../enums/languages';
 import { Themes } from '../../enums/themes';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -14,7 +14,6 @@ import { MatTooltip } from '@angular/material/tooltip';
 import { Position } from 'src/app/models/position';
 import { User } from 'src/app/models/user';
 import { Selection } from 'src/app/models/selection';
-import { GeneratorService } from 'src/app/services/generator.service';
 import { Colors } from 'src/app/enums/colors';
 
 @Component({
@@ -37,8 +36,6 @@ import { Colors } from 'src/app/enums/colors';
 export class EditorComponent implements OnInit, OnDestroy {
 
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private generatorService = inject(GeneratorService);
   private database = inject(Database);
   private renderer = inject(Renderer2);
 
@@ -46,107 +43,103 @@ export class EditorComponent implements OnInit, OnDestroy {
   themeEntries = Object.entries(Themes);
   colors = Object.keys(Colors);
 
-  private _subscriptions: Subscription[] = [];
-  private _defaultLanguage = this.languageEntries.find(f => f[1] == Languages.csharp)?.[0] ?? '';
-  private _defaultTheme = this.themeEntries.find(f => f[1] == Themes.vs_dark)?.[0] ?? '';
-  private _defaultCode = '';
-  private _defaultPosition: Position = { lineNumber: 1, column: 1 };
-  private _defaultSelection: Selection = { begin: { lineNumber: 0, column: 0 }, end: { lineNumber: 0, column: 0 } };
-  private _defaultUsers: User[] = [];
+  private subscriptions: Subscription[] = [];
+  private defaultLanguage = this.languageEntries.find(f => f[1] == Languages.csharp)?.[0] ?? '';
+  private defaultTheme = this.themeEntries.find(f => f[1] == Themes.vs_dark)?.[0] ?? '';
+  private defaultCode = '';
+  private defaultPosition: Position = { lineNumber: 1, column: 1 };
+  private defaultSelection: Selection = { begin: { lineNumber: 0, column: 0 }, end: { lineNumber: 0, column: 0 } };
+  private defaultUsers: User[] = [];
   private oldDecorations: string[] | undefined;
-
-  formGroup: FormGroup = new FormGroup({
-    userName: new FormControl({ value: localStorage.getItem('userName') ?? '', disabled: true }),
-    key: new FormControl({ value: '', disabled: true }),
-    language: new FormControl(this._defaultLanguage),
-    theme: new FormControl(localStorage.getItem('theme') ?? this._defaultTheme),
-    code: new FormControl(undefined)
-  });
-
-  editorOptions: MonacoEditorConstructionOptions = {
-    language: this._defaultLanguage,
-    automaticLayout: true,
-    theme: this.formGroup.get('theme')?.value?.replace('_', '-') ?? this._defaultTheme
-  };
-
-  private _languageRef?: DatabaseReference;
-  private _codeRef?: DatabaseReference;
-  private _usersRef!: DatabaseReference;
-  users = this._defaultUsers;
+  private languageRef?: DatabaseReference;
+  private codeRef?: DatabaseReference;
+  private usersRef!: DatabaseReference;
+  users = this.defaultUsers;
   private editor?: MonacoStandaloneCodeEditor;
   private key?: string;
   private currentUser?: User;
   private oldUserCodes = '';
 
-  ngOnInit() {
+  formGroup: FormGroup = new FormGroup({
+    userName: new FormControl({ value: localStorage.getItem('userName') ?? '', disabled: true }),
+    key: new FormControl({ value: '', disabled: true }),
+    language: new FormControl(this.defaultLanguage),
+    theme: new FormControl(localStorage.getItem('theme') ?? this.defaultTheme),
+    code: new FormControl(undefined)
+  });
+
+  editorOptions: MonacoEditorConstructionOptions = {
+    language: this.defaultLanguage,
+    automaticLayout: true,
+    theme: this.formGroup.get('theme')?.value?.replace('_', '-') ?? this.defaultTheme
+  };
+
+  async ngOnInit() {
     const languageControl = this.formGroup.get('language');
 
     const s0 = languageControl?.valueChanges.subscribe(async newValue => {
-      this.editorOptions = { ...this.editorOptions, language: newValue ?? this._defaultLanguage };
-      if (this._languageRef) {
-        await set(this._languageRef, newValue);
+      this.editorOptions = { ...this.editorOptions, language: newValue ?? this.defaultLanguage };
+      if (this.languageRef) {
+        await set(this.languageRef, newValue);
       }
     });
 
     if (s0) {
-      this._subscriptions.push(s0);
+      this.subscriptions.push(s0);
     }
 
     const s1 = this.formGroup.get('theme')?.valueChanges.subscribe(newValue => {
-      this.editorOptions = { ...this.editorOptions, theme: newValue?.replace('_', '-') ?? this._defaultTheme };
+      this.editorOptions = { ...this.editorOptions, theme: newValue?.replace('_', '-') ?? this.defaultTheme };
     });
 
     if (s1) {
-      this._subscriptions.push(s1);
+      this.subscriptions.push(s1);
     }
 
     const codeControl = this.formGroup.get('code');
 
     const s3 = this.route.paramMap.subscribe(async params => {
-      const key = params.get('key');
+      this.key = params.get('key') ?? '';
+      const currentUserCode = localStorage.getItem('userCode') ?? '';
+      const currentUserName = localStorage.getItem('userName') ?? '';
+      this.currentUser = {
+        code: currentUserCode,
+        name: currentUserName,
+        position: this.defaultPosition,
+        selection: this.defaultSelection
+      };
+      this.formGroup.get('key')?.patchValue(this.key);
+      this.languageRef = ref(this.database, `${this.key}/language`);
+      this.codeRef = ref(this.database, `${this.key}/code`);
+      this.usersRef = ref(this.database, `${this.key}/users`);
 
-      const currentUserCode = localStorage.getItem('userCode');
-      const currentUserName = localStorage.getItem('userName');
-
-      if (!currentUserCode || !currentUserName) {
-        this.router.navigate(key ? ['/settings', key] : ['/settings']);
-        return;
-      }
-
-      this.currentUser = { code: currentUserCode, name: currentUserName, position: this._defaultPosition, selection: this._defaultSelection };
-
-      if (!key) {
-        this.key = this.generatorService.generateKey();
-        this.router.navigate(['/editor', this.key]);
-        return;
-      }
-
-      this.key = key;
-      this.formGroup.get('key')?.patchValue(key);
-
-      this._languageRef = ref(this.database, `${key}/language`);
-      this._codeRef = ref(this.database, `${key}/code`);
-      this._usersRef = ref(this.database, `${key}/users`);
-
-      set(child(this._usersRef, this.currentUser.code), this.currentUser);
+      await set(child(this.usersRef, this.currentUser.code), this.currentUser);
 
       codeControl?.patchValue(await this.getCode());
 
-      onValue(this._languageRef, f => {
+      onValue(this.languageRef, f => {
         if (languageControl && f.val() !== languageControl.value) {
-          languageControl.patchValue(f.val() ?? this._defaultLanguage);
+          languageControl.patchValue(f.val() ?? this.defaultLanguage);
         }
       });
 
-      onValue(this._codeRef, f => {
+      onValue(this.codeRef, f => {
         if (codeControl && f.val() !== codeControl.value) {
-          codeControl.patchValue(f.val() ?? this._defaultCode);
+          codeControl.patchValue(f.val() ?? this.defaultCode);
         }
       });
 
-      onValue(this._usersRef, f => {
+      onChildAdded(this.usersRef, f => {
+        console.log(`Added: ${f.val().code}`);
+      });
+
+      onChildRemoved(this.usersRef, f => {
+        console.log(`Removed: ${f.val().code}`);
+      });
+
+      onValue(this.usersRef, f => {
         const transformedArray = Object.entries(f.val()).map(([key, value]: [string, any]) => ({ code: key, name: value.name, position: value.position, selection: value.selection }));
-        this.users = transformedArray ?? this._defaultUsers;
+        this.users = transformedArray ?? this.defaultUsers;
         const newUserCodes = this.users.map(x => x.code).join();
         if (this.oldUserCodes !== newUserCodes) {
           this.oldUserCodes = newUserCodes;
@@ -158,17 +151,17 @@ export class EditorComponent implements OnInit, OnDestroy {
     });
 
     if (s3) {
-      this._subscriptions.push(s3);
+      this.subscriptions.push(s3);
     }
   }
 
   ngOnDestroy() {
-    this._subscriptions.forEach(s => s.unsubscribe());
+    this.subscriptions.forEach(s => s.unsubscribe());
   }
 
   @HostListener('window:beforeunload') unloadNotification() {
     if (this.currentUser) {
-      remove(child(this._usersRef, this.currentUser.code));
+      remove(child(this.usersRef, this.currentUser.code));
     }
   }
 
@@ -179,7 +172,7 @@ export class EditorComponent implements OnInit, OnDestroy {
       if (this.currentUser) {
         this.currentUser.position.column = e.position.column;
         this.currentUser.position.lineNumber = e.position.lineNumber;
-        set(child(this._usersRef, `${this.currentUser.code}/position`), this.currentUser.position);
+        set(child(this.usersRef, `${this.currentUser.code}/position`), this.currentUser.position);
       }
     });
 
@@ -189,23 +182,19 @@ export class EditorComponent implements OnInit, OnDestroy {
         this.currentUser.selection.begin.lineNumber = e.selection.startLineNumber;
         this.currentUser.selection.end.column = e.selection.positionColumn;
         this.currentUser.selection.end.lineNumber = e.selection.positionLineNumber;
-        set(child(this._usersRef, `${this.currentUser.code}/selection`), this.currentUser.selection);
+        set(child(this.usersRef, `${this.currentUser.code}/selection`), this.currentUser.selection);
       }
     });
 
     editor.onDidChangeModelContent((event) => {
       event.changes.forEach(change => {
         if (change.text && change.rangeLength === 0) {
-          console.log('Text was inserted by typing:', change.text);
-
-          if (this._codeRef) {
-            set(this._codeRef, editor.getValue());
+          if (this.codeRef) {
+            set(this.codeRef, editor.getValue());
           }
         } else if (!change.text && change.rangeLength > 0) {
-          console.log('Text was deleted by typing:', change.rangeLength, 'characters');
-
-          if (this._codeRef) {
-            set(this._codeRef, editor.getValue());
+          if (this.codeRef) {
+            set(this.codeRef, editor.getValue());
           }
         }
       });
@@ -213,7 +202,7 @@ export class EditorComponent implements OnInit, OnDestroy {
   }
 
   private async getCode(): Promise<string> {
-    return (await get(this._codeRef!)).val() ?? this._defaultCode;
+    return (await get(this.codeRef!)).val() ?? this.defaultCode;
   }
 
   private updateUserOverlays() {

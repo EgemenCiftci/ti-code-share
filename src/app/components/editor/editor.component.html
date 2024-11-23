@@ -34,7 +34,7 @@
     </mat-select>
   </mat-form-field>
 
-  @for (user of users; let i = $index; track user) {
+  @for (user of users; let i = $index; track user.code) {
   <div class="user-div" [matTooltip]="user.name" [style.backgroundColor]="colors[i]">{{user.name}}</div>
   }
 </form>

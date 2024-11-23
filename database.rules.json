@@ -1,6 +1,51 @@
 {
   "rules": {
-    ".read": "auth === null",
-    ".write": "auth === null"
+    ".read": true,
+    ".write": true,
+
+    "$key": {
+      "code": {
+        ".validate": "newData.isString()"
+      },
+      "language": {
+        ".validate": "newData.isString() && newData.val().length < 20"
+      },
+      "users": {
+        "$user": {
+          "code": {
+            ".validate": "newData.isString() && newData.val().length < 20"
+          },
+          "name": {
+            ".validate": "newData.isString() && newData.val().length < 20"
+          },
+          "position": {
+            "column": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            },
+            "lineNumber": {
+              ".validate": "newData.isNumber() && newData.val() > 0"
+            }
+          },
+          "selection": {
+            "begin": {
+              "column": {
+                ".validate": "newData.isNumber() && newData.val() > 0"
+              },
+              "lineNumber": {
+                ".validate": "newData.isNumber() && newData.val() > 0"
+              }
+            },
+            "end": {
+              "column": {
+                ".validate": "newData.isNumber() && newData.val() > 0"
+              },
+              "lineNumber": {
+                ".validate": "newData.isNumber() && newData.val() > 0"
+              }
+            }
+          }
+        }
+      }
+    }
   }
 }
