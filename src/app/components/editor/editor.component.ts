@@ -1,6 +1,6 @@
 import { Component, HostListener, inject, OnDestroy, OnInit, Renderer2 } from '@angular/core';
 import { MonacoEditorConstructionOptions, MonacoStandaloneCodeEditor, MonacoEditorModule } from '@materia-ui/ngx-monaco-editor';
-import { Database, ref, set, onValue, DatabaseReference, get, child, remove, onChildAdded, onChildRemoved, Unsubscribe } from '@angular/fire/database';
+import { Database, ref, set, onValue, DatabaseReference, get, child, remove, onChildAdded, onChildRemoved, Unsubscribe, update } from '@angular/fire/database';
 import { ActivatedRoute } from '@angular/router';
 import { Languages } from '../../enums/languages';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -71,6 +71,8 @@ export class EditorComponent implements OnInit, OnDestroy {
   };
 
   async ngOnInit() {
+    await this.removeOldData();
+
     const languageControl = this.formGroup.get('language');
 
     languageControl?.valueChanges
@@ -285,5 +287,26 @@ export class EditorComponent implements OnInit, OnDestroy {
     styleSheet.type = 'text/css';
     styleSheet.innerHTML = styles;
     this.renderer.appendChild(document.head, styleSheet);
+  }
+
+  private async removeOldData() {
+    try {
+      const dbRef = ref(this.database, '/'); 
+      const now = Date.now(); 
+      const cutoff = now - 24 * 60 * 60 * 1000; 
+      const snapshot = await get(dbRef); 
+      let updates: any = {}; 
+  
+      snapshot.forEach(x => { 
+        if (parseInt(x.key) < cutoff) { 
+          updates[x.key] = null; 
+        } 
+      }); 
+      
+      await update(dbRef, updates);
+      console.log('Old data removed successfully!');
+    } catch (error) {
+      console.error();
+    }
   }
 }
