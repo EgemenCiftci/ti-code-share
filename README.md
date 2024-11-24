@@ -1,6 +1,7 @@
 # TI Code Share
 
 Real-time code sharing.
+Uses Firebase realtime database.
 
 Supported Languages:
 - C#

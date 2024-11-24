@@ -23,18 +23,7 @@
     </mat-select>
   </mat-form-field>
 
-  <mat-form-field appearance="fill">
-    <mat-label>Theme</mat-label>
-    <mat-select formControlName="theme">
-      @for (entry of themeEntries; track entry) {
-      <mat-option [value]="entry[0]">
-        {{entry[1]}}
-      </mat-option>
-      }
-    </mat-select>
-  </mat-form-field>
-
-  @for (user of users; let i = $index; track user.code) {
-  <div class="user-div" [matTooltip]="user.name" [style.backgroundColor]="colors[i]">{{user.name}}</div>
+  @for (entry of usersMap; track entry[0]) {
+  <div class="user-div" [matTooltip]="entry[1].name" [style.backgroundColor]="entry[1].color">{{entry[1].name}}</div>
   }
 </form>

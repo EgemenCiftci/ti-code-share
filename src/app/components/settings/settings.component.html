@@ -15,5 +15,21 @@
     </mat-select>
   </mat-form-field>
   <br />
-  <button mat-raised-button color="primary" (click)="saveClick()">Save</button>
+  <mat-form-field appearance="fill">
+    <mat-label>Color</mat-label>
+    <mat-select formControlName="color">
+      <mat-select-trigger>
+        <span class="color-box"
+          [style.background-color]="formGroup.controls.color.value"></span>{{getColorName(formGroup.controls.color.value)}}
+      </mat-select-trigger>
+      @for (entry of colorEntries; track entry) {
+      <mat-option [value]="entry[0]">
+        <span class="color-box" [style.background-color]="entry[0]"></span>{{entry[1]}}
+      </mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+  <br />
+  <button mat-raised-button color="primary" (click)="saveClick()" [disabled]="formGroup.invalid">Save</button>
+  <button class="cancel-button" mat-raised-button color="warn" (click)="cancelClick()">Cancel</button>
 </form>
