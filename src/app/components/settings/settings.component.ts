@@ -35,19 +35,20 @@ export class SettingsComponent implements OnInit {
   themeEntries = Object.entries(Themes);
   colorEntries = Object.entries(Colors);
 
+  private defaultUserName = '';
   private defaultTheme = this.themeEntries.find(f => f[1] == Themes.vs_dark)?.[0] ?? '';
   private defaultColor = this.colorEntries.find(f => f[1] == Colors.red)?.[0] ?? '';
-  private key?: string;
+  private key = '';
 
   formGroup = new FormBuilder().group({
-    userName: [localStorage.getItem('userName') ?? '', Validators.required],
+    userName: [localStorage.getItem('userName') ?? this.defaultUserName, Validators.required],
     theme: [localStorage.getItem('theme') ?? this.defaultTheme, Validators.required],
     color: [localStorage.getItem('color') ?? this.defaultColor, Validators.required]
   });
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      this.key = params.get('key') ?? undefined;
+      this.key = params.get('key') ?? '';
     });
   }
 
@@ -59,11 +60,11 @@ export class SettingsComponent implements OnInit {
           localStorage.setItem('userCode', userCode);
         }
 
-        localStorage.setItem('userName', this.formGroup.controls.userName.value ?? '');
-        localStorage.setItem('theme', this.formGroup.get('theme')?.value ?? this.defaultTheme);
-        localStorage.setItem('color', this.formGroup.get('color')?.value ?? this.defaultColor);
+        localStorage.setItem('userName', this.formGroup.controls.userName.value ?? this.defaultUserName);
+        localStorage.setItem('theme', this.formGroup.controls.theme.value ?? this.defaultTheme);
+        localStorage.setItem('color', this.formGroup.controls.color.value ?? this.defaultColor);
 
-        await this.router.navigate(this.key ? ['/editor', this.key] : ['/editor']);
+        await this.router.navigate(['/editor', this.key]);
       }
     } catch (error) {
       console.error(error);
@@ -72,7 +73,7 @@ export class SettingsComponent implements OnInit {
 
   async cancelClick() {
     try {
-      await this.router.navigate(this.key ? ['/editor', this.key] : ['/editor']);
+      await this.router.navigate(['/editor', this.key]);
     } catch (error) {
       console.error(error);
     }

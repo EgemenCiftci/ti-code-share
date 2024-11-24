@@ -3,9 +3,9 @@
     <span>TI Code Share</span>
     <span class="spacer"></span>
     <nav>
-        <button mat-flat-button color="primary" [routerLink]="['/editor', key]" routerLinkActive="active"
+        <button mat-flat-button color="primary" [routerLink]="['/editor', key()]" routerLinkActive="active"
             ariaCurrentWhenActive="page">Editor</button>
-        <button mat-flat-button color="primary" [routerLink]="['/settings', key]" routerLinkActive="active"
+        <button mat-flat-button color="primary" [routerLink]="['/settings', key()]" routerLinkActive="active"
             ariaCurrentWhenActive="page">Settings</button>
         <button mat-flat-button color="primary" routerLink="/about" routerLinkActive="active"
             ariaCurrentWhenActive="page">About</button>

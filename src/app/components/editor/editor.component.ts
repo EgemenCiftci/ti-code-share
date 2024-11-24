@@ -55,7 +55,7 @@ export class EditorComponent implements OnInit, OnDestroy {
   private editor?: MonacoStandaloneCodeEditor;
   private key?: string;
   private currentUser?: User;
-  private userSubscriptionsMap: Map<string, Unsubscribe> = new Map();
+  private userUnsubscribesMap: Map<string, Unsubscribe> = new Map();
 
   formGroup: FormGroup = new FormGroup({
     userName: new FormControl({ value: localStorage.getItem('userName') ?? '', disabled: true }),
@@ -67,7 +67,7 @@ export class EditorComponent implements OnInit, OnDestroy {
   editorOptions: MonacoEditorConstructionOptions = {
     language: this.defaultLanguage,
     automaticLayout: true,
-    theme: localStorage.getItem('theme')?.replace('_', '-') ?? this.defaultTheme 
+    theme: localStorage.getItem('theme')?.replace('_', '-') ?? this.defaultTheme
   };
 
   async ngOnInit() {
@@ -131,22 +131,31 @@ export class EditorComponent implements OnInit, OnDestroy {
           this.usersMap.set(user.code, user);
           this.addStyles(user);
 
-          const subscription = onValue(child(this.usersRef, user.code), f => {
+          const unsubscribe = onValue(child(this.usersRef, user.code), f => {
             // User changed
             const user = f.val();
             const userInTheMap = this.usersMap.get(user.code);
 
-            if (userInTheMap && user.color !== userInTheMap.color) {
-              // User color changed
-              this.removeStyles(userInTheMap.code);
-              userInTheMap.color = user.color;
-              this.addStyles(userInTheMap);
-            }
+            if (userInTheMap) {
+              if (user.color !== userInTheMap.color) {
+                // User color changed
+                this.removeStyles(userInTheMap.code);
+                userInTheMap.color = user.color;
+                this.addStyles(userInTheMap);
+              }
 
-            this.updateUserOverlays(this.usersMap);
+              if (user.name !== userInTheMap.name) {
+                // User name changed
+                userInTheMap.name = user.name;
+              }
+
+              userInTheMap.position = user.position;
+              userInTheMap.selection = user.selection;
+              this.updateUserOverlays(this.usersMap);
+            }
           });
 
-          this.userSubscriptionsMap.set(user.code, subscription);
+          this.userUnsubscribesMap.set(user.code, unsubscribe);
         });
 
         onChildRemoved(this.usersRef, f => {
@@ -157,7 +166,10 @@ export class EditorComponent implements OnInit, OnDestroy {
             return;
           }
 
-          //this.userSubscriptionsMap.get(user.code)?.unsubscribe();
+          const unsubscribe = this.userUnsubscribesMap.get(user.code);
+          if (unsubscribe) {
+            unsubscribe();
+          }
           this.usersMap.delete(user.code);
           this.removeStyles(user.code);
         });
@@ -190,8 +202,8 @@ export class EditorComponent implements OnInit, OnDestroy {
       if (this.currentUser) {
         this.currentUser.selection.begin.column = e.selection.startColumn;
         this.currentUser.selection.begin.lineNumber = e.selection.startLineNumber;
-        this.currentUser.selection.end.column = e.selection.positionColumn;
-        this.currentUser.selection.end.lineNumber = e.selection.positionLineNumber;
+        this.currentUser.selection.end.column = e.selection.endColumn;
+        this.currentUser.selection.end.lineNumber = e.selection.endLineNumber;
         set(child(this.usersRef, `${this.currentUser.code}/selection`), this.currentUser.selection);
       }
     });
